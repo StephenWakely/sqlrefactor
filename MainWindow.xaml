@@ -1,0 +1,139 @@
+﻿<Window x:Class="SQLRefactor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
+        xmlns:wf="clr-namespace:ScintillaNET;assembly=ScintillaNet"  
+        xmlns:local="clr-namespace:SQLRefactor"
+        Title="MainWindow" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" d:DesignHeight="486" d:DesignWidth="756" SizeToContent="WidthAndHeight" Icon="Creature_boy.ico">
+    <Window.Background>
+        <SolidColorBrush Color="AliceBlue"/>
+    </Window.Background>
+    <Window.Resources>
+        <local:NullableBoolToVisibilityConverter x:Key="boolToVis" />
+    </Window.Resources>
+
+    <DockPanel>
+        <ToolBarTray DockPanel.Dock="Top" >
+            <ToolBar>
+                <Button Command="local:Commands.LoadFile">
+                    <Image Width="16" Height="16" Name="OpenFileImage"></Image>
+                </Button>
+                <Button Command="local:Commands.SaveFile">
+                    <Image Width="16" Height="16" Name="SaveFileImage"></Image>
+                </Button>
+            </ToolBar>
+        </ToolBarTray>
+
+        <StatusBar DockPanel.Dock="Bottom" Opacity="0.5">
+            <StatusBarItem>
+                <ProgressBar Name="progressBar" Height="12" Width="100" Visibility="Hidden"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
+            <TabControl Margin="19,17,25,3" Name="tabControl" Grid.Row="0" Opacity="0.8">
+                <TabItem Header="Base query" Name="tabItem1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="311*" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="100" />
+                        </Grid.RowDefinitions>
+                        <WindowsFormsHost Name="masterQuery" DataContextChanged="masterQuery_DataContextChanged" Grid.Row="0">
+                            <wf:Scintilla Name="Designer" TextChanged="Master_TextChanged"></wf:Scintilla>
+                        </WindowsFormsHost>
+                        <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"></GridSplitter>
+                        <StackPanel Margin="10" Grid.Row="2">
+                            <StackPanel.Visibility>
+                                <Binding Path="CurrentQuery.Results.Success" Converter="{StaticResource ResourceKey=boolToVis}">
+                                    <Binding.ConverterParameter>
+                                        <system:Boolean>True</system:Boolean>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </StackPanel.Visibility>
+                            <TextBlock Height="23" FontWeight="Bold">Success</TextBlock>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Height="23" FontWeight="Bold">Rows returned :</TextBlock>
+                                <TextBlock Height="23" Text="{Binding Path=MasterQuery.Results.RowsReturned, StringFormat=\{0:N0\} rows}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Height="23" FontWeight="Bold">Time taken :</TextBlock>
+                                <TextBlock Height="23" Text="{Binding Path=MasterQuery.Results.Time, StringFormat=\{0:N0\}}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Row="2">
+                            <StackPanel.Visibility>
+                                <Binding Path="CurrentQuery.Results.Success" Converter="{StaticResource ResourceKey=boolToVis}">
+                                    <Binding.ConverterParameter>
+                                        <system:Boolean>False</system:Boolean>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </StackPanel.Visibility>
+                            <TextBlock Margin="10" Height="23" FontWeight="Bold">Failed</TextBlock>
+                            <TextBlock Foreground="Red" Text="{Binding Path=MasterQuery.Results.ErrorMessage}"/>
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="{Binding Path=CurrentQueryIndex}" HeaderStringFormat="Iterations {0:N}" Name="IterationsTab">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="34" />
+                            <RowDefinition Height="254*" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="100" />
+                        </Grid.RowDefinitions>
+                        <WindowsFormsHost Name="iterationQuery"  Margin="2,2,12,4" Grid.Row="1" Grid.ColumnSpan="2" DataContextChanged="iterationQuery_DataContextChanged">
+                            <wf:Scintilla Name="Designer" TextChanged="Iteration_TextChanged" />
+                        </WindowsFormsHost>
+                        <GridSplitter Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"></GridSplitter>
+                        <Button Content="&gt;&gt;" Height="23" Margin="0,7,12,0" Name="btnNext" VerticalAlignment="Top" HorizontalAlignment="Right" Width="39" Command="local:Commands.NextQuery" Grid.Column="1" Opacity="1"/>
+                        <Button Content="&lt;&lt;" Height="23" HorizontalAlignment="Right" Margin="0,6,57,0" Name="btnPrevious" VerticalAlignment="Top" Width="39" Grid.Column="1" Command="local:Commands.PreviousQuery" Opacity="1" />
+                        <DockPanel Grid.Row="3" >
+                            <DockPanel.Visibility>
+                                <Binding Path="CurrentQuery.Results.Success" Converter="{StaticResource ResourceKey=boolToVis}">
+                                    <Binding.ConverterParameter>
+                                        <system:Boolean>True</system:Boolean>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </DockPanel.Visibility>
+                            <StackPanel DockPanel.Dock="Left" Margin="10">
+                                <TextBlock Height="23" FontWeight="Bold">Success</TextBlock>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Height="23" FontWeight="Bold">Rows returned :</TextBlock>
+                                    <TextBlock Height="23" Text="{Binding Path=CurrentQuery.Results.RowsReturned, StringFormat={}{0:N0} rows}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Height="23" FontWeight="Bold">Time taken :</TextBlock>
+                                    <TextBlock Height="23" Text="{Binding Path=CurrentQuery.Results.Time, StringFormat={}{0:N} milliseconds}" />
+                                </StackPanel>
+                            </StackPanel>
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" >
+                                <DataGrid AlternatingRowBackground="Azure" RowHeight="18" RowBackground="Cornsilk"  Name="gridDifferences" BorderThickness="1" VerticalAlignment="Bottom" />
+                            </ScrollViewer>
+                        </DockPanel>
+                        <StackPanel Grid.Row="3">
+                            <StackPanel.Visibility>
+                                <Binding Path="CurrentQuery.Results.Success" Converter="{StaticResource ResourceKey=boolToVis}">
+                                    <Binding.ConverterParameter>
+                                        <system:Boolean>False</system:Boolean>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </StackPanel.Visibility>
+                            <TextBlock Margin="10" Height="23" FontWeight="Bold">Failed</TextBlock>
+                            <TextBlock Foreground="Red" Text="{Binding Path=CurrentQuery.Results.ErrorMessage}"/>
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+            <Button Grid.Row="1" Content="Run query" Margin="0,0,30,12" Name="btnRun" Height="32" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" Command="local:Commands.RunQuery" />
+        </Grid>
+        
+    </DockPanel>
+</Window>
